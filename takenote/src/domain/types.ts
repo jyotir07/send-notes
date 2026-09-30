@@ -15,6 +15,14 @@ export type ActivityStatus = 'upcoming' | 'completed' | 'archived';
 export const ITEM_KINDS = ['pack', 'buy', 'collect', 'do', 'remember'] as const;
 export type ItemKind = (typeof ITEM_KINDS)[number];
 
+export const ITEM_KIND_LABELS: Record<ItemKind, string> = {
+  pack: 'Pack',
+  buy: 'Buy',
+  collect: 'Collect',
+  do: 'Do',
+  remember: 'Remember',
+};
+
 export type Activity = {
   id: string;
   title: string;

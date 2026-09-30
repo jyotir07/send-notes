@@ -31,6 +31,7 @@ export default function RootLayout() {
             <Stack.Screen name="index" options={{ title: 'TakeNote' }} />
             <Stack.Screen name="activity/new" options={{ title: 'New activity' }} />
             <Stack.Screen name="activity/[id]/index" options={{ title: '' }} />
+            <Stack.Screen name="activity/[id]/edit" options={{ title: 'Edit activity' }} />
           </Stack>
         </DbProvider>
       </Suspense>

@@ -1,38 +1,22 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
 
-import { Button } from '@/components/Button';
-import { TextField } from '@/components/TextField';
-import { spacing, type } from '@/theme/tokens';
-import { useTheme } from '@/theme/useTheme';
+import { ActivityForm } from '@/components/ActivityForm';
+import { useMutate } from '@/hooks/useMutate';
+import { insertActivity } from '@/repositories/activities';
 
 export default function NewActivity() {
-  const t = useTheme();
-  const [title, setTitle] = useState('');
+  const mutate = useMutate();
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text style={[type.caption, { color: t.textMuted }]}>What are you getting ready for?</Text>
-      <TextField
-        autoFocus
-        placeholder="e.g. Goa Weekend"
-        value={title}
-        onChangeText={setTitle}
-        returnKeyType="done"
-      />
-      <Button
-        label="Create"
-        disabled={title.trim().length === 0}
-        onPress={() => router.replace({ pathname: '/activity/[id]', params: { id: 'sample' } })}
-      />
-    </ScrollView>
+    <ActivityForm
+      submitLabel="Create activity"
+      onSubmit={async (values) => {
+        let id: string | undefined;
+        await mutate(async (db) => {
+          id = (await insertActivity(db, values)).id;
+        });
+        if (id) router.replace({ pathname: '/activity/[id]', params: { id } });
+      }}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-});
