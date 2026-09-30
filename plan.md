@@ -2,6 +2,20 @@
 
 Source of truth for scope: `takenote_mobile_mvp_and_vision.md`. This plan turns that brief into ordered, verifiable phases. Phases 0–6 are the MVP; Phase 7 is validation; Phase 8+ is post-MVP and only starts once real usage justifies it.
 
+## Status
+
+| Phase | State |
+| --- | --- |
+| 0 — Project setup | Done |
+| 1 — App foundation | Done |
+| 2 — Data layer | Done (27 Jest tests against real SQLite) |
+| 3 — Core checklist | Done — needs on-device check |
+| 4 — Quick capture, Inbox, templates | Done — needs on-device check |
+| 5 — Packing mode and polish | Done — needs on-device check |
+| 6 — Test and distribute | Not started (needs an Expo account for EAS builds) |
+
+The app lives in `takenote/`. Run it on a phone: `cd takenote && npx expo start`, then scan the QR code with Expo Go (add `--tunnel` if phone and PC are on different networks).
+
 ---
 
 ## Guiding constraints
@@ -26,9 +40,11 @@ Source of truth for scope: `takenote_mobile_mvp_and_vision.md`. This plan turns 
 | IDs | UUID v4 (`expo-crypto` `randomUUID`) | Stable, generated on-device, safe to sync later. Rejected autoincrement ints — they collide across devices. |
 | Dates | Activity date stored as `YYYY-MM-DD` text; timestamps as ISO-8601 UTC | A trip "on Friday" is a calendar date, not an instant. Storing it as a timestamp causes off-by-one bugs across timezones. |
 | State | No global store. Repository functions + small hooks that reload on focus/mutation | Data is local and small. Rejected Redux/Zustand as premature; revisit only if cross-screen refresh gets painful. |
-| Reordering | `react-native-draggable-flatlist` (on Reanimated + Gesture Handler, both already in Expo) | Long-press drag is the expected mobile idiom. Fallback if it misbehaves: "move up/down" in the item menu. |
+| Reordering | "Move up / Move down" in the item menu | Chosen over drag-and-drop to avoid a third-party gesture library on a brand-new SDK. Revisit if testers ask for drag. Sections keep creation order. |
+| Icons | None — text glyphs (＋ ⋯ ✓ ›) | `@expo/vector-icons` is deprecated as of SDK 57; adding its replacement wasn't worth it for the MVP. |
+| Dialogs | One `Overlay` modal per screen (action sheet / prompt / confirm) | iOS can't present a Modal or Alert while another is dismissing, so "menu → Edit/Delete" must reuse one modal. `Alert.prompt` is iOS-only. |
 | Haptics | `expo-haptics` on check-off and completion | Brief calls for tactile polish; no permission required. |
-| Testing | `jest-expo` for repository/data logic; `tsc --noEmit`; `expo lint` | Data loss is the #1 MVP risk, so tests focus on the data layer. UI verified manually on device. |
+| Testing | `jest-expo` for repository/data logic; `tsc --noEmit`; `expo lint` | Data loss is the #1 MVP risk, so tests focus on the data layer. Repositories depend on a small `Db` interface, so tests run them against Node's built-in `node:sqlite` instead of mocks. UI verified manually on device. |
 | Backend | None for MVP. Supabase only when accounts/sync are needed (Phase 9). | Per brief. |
 
 ### Deviations from the brief's data model (intentional)
@@ -84,24 +100,26 @@ Deleting a section moves its items to "ungrouped" (`SET NULL`) rather than delet
 
 ---
 
-## Proposed project structure
+## Project structure
 
 ```
-app/                      # Expo Router screens
-  _layout.tsx
-  index.tsx               # Home
-  activity/new.tsx        # Create activity
-  activity/[id]/index.tsx # Activity detail
-  activity/[id]/pack.tsx  # Packing mode
-  inbox.tsx
-  capture.tsx             # Quick capture (modal)
-src/
-  db/                     # connection, migrations
-  repositories/           # activities, sections, items, inbox — the only SQLite callers
-  domain/                 # types, templates data, progress helpers
-  hooks/                  # useActivities, useActivity, useInbox
-  components/             # Button, Card, Checkbox, ProgressBar, EmptyState, ...
-  theme/                  # tokens, light/dark palettes, useTheme
+takenote/src/
+  app/                      # Expo Router screens
+    _layout.tsx             # theme, DB provider, error boundary
+    index.tsx               # Home
+    capture.tsx             # Quick capture (modal)
+    inbox.tsx
+    activity/new.tsx        # Create activity (+ starter template)
+    activity/[id]/index.tsx # Activity detail
+    activity/[id]/edit.tsx
+    activity/[id]/pack.tsx  # Packing mode
+  db/                       # Db interface, expo-sqlite adapter, migrations, provider
+  repositories/             # activities, sections, items, inbox, templates — the only SQL callers
+  domain/                   # types, dates, template data
+  hooks/                    # useQuery (reload on focus), useMutate (write + report errors)
+  components/               # Button, Card, Checkbox, Overlay, Snackbar, ...
+  theme/                    # tokens, light/dark palettes, useTheme
+  test/                     # node:sqlite Db adapter for Jest
 ```
 
 ---
@@ -249,6 +267,5 @@ Order is a proposal; Phase 7 findings decide the real order.
 
 ## Open decisions (need your call)
 
-1. **Reordering UX** — drag-and-drop (recommended, more expected on mobile, one extra dependency) vs. move up/down menu (zero deps, clunkier).
-2. **iOS testing** — is an iPhone and/or Apple Developer account available? If not, Phase 6 is Android-only and iOS is verified via Expo Go only.
-3. **Item `kind` in the UI** — recommend storing it but exposing it only as an optional chip in the edit sheet for MVP, defaulting to `pack`, to keep capture single-field.
+1. **iOS testing** — is an iPhone and/or Apple Developer account available? If not, Phase 6 is Android-only and iOS is verified via Expo Go only.
+2. **Bundle identifier** — `com.jyotir07.takenote` is a placeholder in `app.json`; set the real one before the first EAS build, since it can't change after a store release.
