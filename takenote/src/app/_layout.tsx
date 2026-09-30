@@ -1,10 +1,26 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { useTheme } from '@/theme/useTheme';
+
 export default function RootLayout() {
+  const t = useTheme();
+
   return (
     <>
-      <Stack />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: t.background },
+          headerTintColor: t.accent,
+          headerTitleStyle: { color: t.text },
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: t.background },
+        }}
+      >
+        <Stack.Screen name="index" options={{ title: 'TakeNote' }} />
+        <Stack.Screen name="activity/new" options={{ title: 'New activity' }} />
+        <Stack.Screen name="activity/[id]/index" options={{ title: '' }} />
+      </Stack>
       <StatusBar style="auto" />
     </>
   );
