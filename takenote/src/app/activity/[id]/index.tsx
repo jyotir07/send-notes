@@ -1,4 +1,5 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useCallback } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -18,6 +19,7 @@ import {
   type ChecklistItem,
   type ChecklistSection,
 } from '@/domain/types';
+import { celebrate, tick } from '@/feedback/haptics';
 import { useMutate } from '@/hooks/useMutate';
 import { useQuery } from '@/hooks/useQuery';
 import { deleteActivity, getActivity, setActivityStatus } from '@/repositories/activities';
@@ -35,6 +37,7 @@ import { useTheme } from '@/theme/useTheme';
 
 export default function ActivityDetail() {
   const t = useTheme();
+  const headerHeight = useHeaderHeight();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, error, reload } = useQuery(
     useCallback(
@@ -171,12 +174,19 @@ export default function ActivityDetail() {
     showActions(actions, item.title);
   };
 
+  const toggle = async (item: ChecklistItem) => {
+    const checking = !item.isCompleted;
+    if (!(await mutate((db) => setItemCompleted(db, item.id, checking)))) return;
+    if (checking && done + 1 === items.length) celebrate();
+    else tick();
+  };
+
   const renderItems = (list: ChecklistItem[]) =>
     list.map((item) => (
       <ItemRow
         key={item.id}
         item={item}
-        onToggle={() => mutate((db) => setItemCompleted(db, item.id, !item.isCompleted))}
+        onToggle={() => toggle(item)}
         onPress={() => openItemMenu(item)}
       />
     ));
@@ -194,7 +204,7 @@ export default function ActivityDetail() {
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={100}
+      keyboardVerticalOffset={headerHeight}
     >
       <Stack.Screen
         options={{
@@ -212,9 +222,19 @@ export default function ActivityDetail() {
 
         <View style={styles.progress}>
           <Text style={[type.bodyStrong, { color: t.text }]}>
-            {items.length === 0 ? 'Nothing added yet' : `${done} of ${items.length} done`}
+            {items.length === 0
+              ? 'Nothing added yet'
+              : done === items.length
+                ? `All ${items.length} done — you're all set ✓`
+                : `${done} of ${items.length} done`}
           </Text>
           <ProgressBar done={done} total={items.length} />
+          {items.length > 0 && (
+            <Button
+              label="Start packing"
+              onPress={() => router.push({ pathname: '/activity/[id]/pack', params: { id } })}
+            />
+          )}
         </View>
 
         <View>
@@ -260,7 +280,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   progress: {
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   sectionHeader: {
     flexDirection: 'row',

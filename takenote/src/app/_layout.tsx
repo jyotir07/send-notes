@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Suspense } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { DbProvider } from '@/db/DbProvider';
 import { useTheme } from '@/theme/useTheme';
 
@@ -10,7 +11,7 @@ export default function RootLayout() {
   const t = useTheme();
 
   return (
-    <>
+    <AppErrorBoundary background={t.background}>
       <Suspense
         fallback={
           <View style={{ flex: 1, justifyContent: 'center', backgroundColor: t.background }}>
@@ -32,12 +33,13 @@ export default function RootLayout() {
             <Stack.Screen name="activity/new" options={{ title: 'New activity' }} />
             <Stack.Screen name="activity/[id]/index" options={{ title: '' }} />
             <Stack.Screen name="activity/[id]/edit" options={{ title: 'Edit activity' }} />
+            <Stack.Screen name="activity/[id]/pack" options={{ title: 'Packing' }} />
             <Stack.Screen name="inbox" options={{ title: 'Inbox' }} />
             <Stack.Screen name="capture" options={{ title: 'Quick capture', presentation: 'modal' }} />
           </Stack>
         </DbProvider>
       </Suspense>
       <StatusBar style="auto" />
-    </>
+    </AppErrorBoundary>
   );
 }
