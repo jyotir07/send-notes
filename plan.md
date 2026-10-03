@@ -1,6 +1,6 @@
 # TakeNote — Implementation Plan
 
-Source of truth for scope: `takenote_mobile_mvp_and_vision.md`. This plan turns that brief into ordered, verifiable phases. Phases 0–6 are the MVP; Phase 7 is validation; Phase 8+ is post-MVP and only starts once real usage justifies it.
+Source of truth for scope: `takenote_mobile_mvp_and_vision.md` (kept local, not tracked in git). This plan turns that brief into ordered, verifiable phases. Phases 0–6 are the MVP; Phase 7 is validation; Phase 8+ is post-MVP and only starts once real usage justifies it.
 
 ## Status
 
@@ -139,7 +139,7 @@ takenote/src/
 ## Phase 1 — App foundation (Milestone 1)
 
 - Theme tokens: color palette (one accent), spacing scale, type scale, radii. Light + dark palettes wired through `useColorScheme` from the start — cheaper now than retrofitting.
-- Base components: `Screen` (safe-area wrapper), `Button`, `Card`, `TextField`, `Checkbox`, `ProgressBar`, `EmptyState`, `IconButton`.
+- Base components: `Button`, `Card`, `TextField`, `Checkbox`, `ProgressBar`, `EmptyState`, `IconButton`. (A planned `Screen` safe-area wrapper was not built.)
 - Routes and static screens with hard-coded data: Home, Create Activity, Activity Detail.
 - Navigation between them works; back behavior correct on Android.
 
@@ -172,7 +172,7 @@ Split out from "core checklist" because it's the riskiest part and should be sol
 
 - Create activity: name (required, trimmed, non-empty), type (optional, default `custom`), date (optional, native date picker, clearable). On save → navigate to detail.
 - Home: upcoming activity cards (title, date, "x of y done"), empty state inviting first activity.
-- Activity detail: title, date, progress, sections with items, ungrouped items, add-item input (stays focused after submit for rapid entry), check/uncheck, edit item title, delete item, add/rename/delete section, drag reorder.
+- Activity detail: title, date, progress, sections with items, ungrouped items, add-item input (stays focused after submit for rapid entry), check/uncheck, edit item title, delete item, add/rename/delete section, reorder items with move up/down (see Technical decisions).
 - Edit activity menu: rename, change type/date, mark completed, delete (with confirmation).
 - Hooks reload on screen focus so Home reflects changes made in Detail.
 
